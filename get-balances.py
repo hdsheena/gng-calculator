@@ -45,17 +45,17 @@ assetbundles_fname = [(x.split('/')[-2], x.split('/')[-1]) for x in assetbundles
 # Stage III: download individual assetbundles and export JSON
 for i in assetbundles_urls:
   with requests.get(i) as r:
-    with open(f"balance/{i.split('/')[-1]}", 'wb') as f:
+    with open(f"event/{i.split('/')[-1]}", 'wb') as f:
       f.write(r.content)
 
 for i in assetbundles_fname:
-  uab = UnityPy.load(f"balance/{i[1]}")
+  uab = UnityPy.load(f"event/{i[1]}")
   for obj in uab.objects:
     if obj.type.name == "TextAsset":
       data = obj.read()
-      with open(f"balance/balance_{i[0]}.json", 'w') as f:
+      with open(f"event/event_{i[0]}.json", 'w') as f:
         f.write(data.text)
 
 # Stage IV: delete assetbundles (as they are only temp)
 for i in assetbundles_urls:
-  os.remove(f"balance/{i.split('/')[-1]}")
+  os.remove(f"event/{i.split('/')[-1]}")
