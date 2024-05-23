@@ -5,14 +5,16 @@ import requests
 import base64
 import gzip
 import UnityPy
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 TITLE_ID = os.getenv('TITLE_ID')
 GAME_VER = os.getenv('GAME_VER')
 GC_AUTH_ID = os.getenv('GC_AUTH_ID')
-
+GC_AUTH_ID = 'T:_d8bbe62950f4caae7d37a00dfa6c283f'
+TITLE_ID = '8b9b7'
+GAME_VER = '1.34.0'
 REQUEST_URL = f"https://{TITLE_ID}.playfabapi.com/Client/LoginWithGameCenter"
 
 # Stage I: config
@@ -28,7 +30,9 @@ with open('gc-auth-body.json', 'r') as f:
 r = requests.post(REQUEST_URL, json=GC_AUTH_BODY).json()
 assetbundles = json.loads(r["data"]["InfoResultPayload"]["TitleData"][f"AssetBundleInfos_{GAME_VER}"])
 lte_schedule = json.loads(gzip.decompress(base64.b64decode(r["data"]["InfoResultPayload"]["TitleData"][f"LteSchedule_{GAME_VER}"])).decode())
-
+# write lte_schedule to file
+with open('lte_schedule.json', 'w') as f:
+  json.dump(lte_schedule, f)
 assetbundles_domain = assetbundles["RemoteBundlesUrl"]
 assetbundles_urls = []
 
