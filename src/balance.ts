@@ -1,6 +1,6 @@
 import { Mineshaft } from './mineshaft';
 import { Card } from './card';
-export interface Balance {
+export interface Event {
     Id: string;
     Shafts: Mineshaft[];
     ExtraCards: Card[];

@@ -16,12 +16,17 @@ let db = new sqlite3.Database('./db.sqlite', (err) => {
   }
   console.log('Connected to the SQlite database.');
 });
+
+// create database structure
+db.serialize(() => {
+  db.run('CREATE TABLE IF NOT EXISTS event (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
+});
 app.use(express.static('public', {extensions: ['html']}));
 app.use(express.static(__dirname + '/../node_modules/bootstrap/dist'));
 
 app.get("/api/event/all", async (req: Request, res: Response) => {
-  // return all eventids from balance folder
-  const path = 'balance';
+  // return all eventids from event folder
+  const path = 'event';
   
   try {
     const files = await new Promise<string[]>((resolve, reject) => {
@@ -33,7 +38,7 @@ app.get("/api/event/all", async (req: Request, res: Response) => {
         }
       });
     });
-    const eventIds = files.map(file => file.replace('balance_', '').replace('.json', ''));
+    const eventIds = files.map(file => file.replace('event_', '').replace('.json', ''));
     res.json(eventIds);
   } catch {
     res.sendStatus(404);
@@ -46,15 +51,15 @@ app.get("/api/event/schedule", async (req: Request, res: Response) => {
 });
 
 app.get("/api/mineshaft", async (req: Request, res: Response) => {
-  if (!req.query.balance || typeof req.query.balance !== 'string') {
+  if (!req.query.event || typeof req.query.event !== 'string') {
     res.sendStatus(400);
     return;
   }
 
-  const balance_id: string = req.query.balance;
+  const event_id: string = req.query.event;
 
   try {
-    const json_data = JSON.parse(await readFile(`balance/balance_${balance_id}.json`, "utf8"));
+    const json_data = JSON.parse(await readFile(`event/event_${event_id}.json`, "utf8"));
     const return_data : Mineshaft[] = [];
 
     // do the forge first

@@ -1,5 +1,5 @@
-const FALLBACK_BALANCE_ID = 'evergreen';
-const get_balance_ids = async () => {
+const FALLBACK_EVENT_ID = 'evergreen';
+const get_event_ids = async () => {
   return await fetch('api/event/all')
     .then(async (response) => {
       if (response.status === 200) {
@@ -27,25 +27,25 @@ const get_balance_ids = async () => {
     )
 }
 
-const loadBalance = async (balanceId) => {
+const loadEvent = async (eventId) => {
   // immediately set fallback if NULL
-  if (!balanceId) {
-    balanceId = FALLBACK_BALANCE_ID;
+  if (!eventId) {
+    eventId = FALLBACK_EVENT_ID;
   }
 
-  const data = await getMineshafts(balanceId);
+  const data = await getMineshafts(eventId);
 
   if (data["status"]) {
     document.querySelector('#errorText').classList.add('d-none');
-    selectBalanceIdNavbar(balanceId);
+    selectEventIdNavbar(eventId);
     processData(data["content"]);
     return;
   } else if (data["content"] === 404) {
-    const dataFallback = await getMineshafts(FALLBACK_BALANCE_ID);
+    const dataFallback = await getMineshafts(FALLBACK_EVENT_ID);
 
     if (dataFallback["status"]) {
       document.querySelector('#errorText').classList.add('d-none');
-      selectBalanceIdNavbar(FALLBACK_BALANCE_ID);
+      selectEventIdNavbar(FALLBACK_EVENT_ID);
       processData(dataFallback["content"]);
     } else {
       document.querySelector('#errorText').innerText = `${dataFallback["content"]} error`;
@@ -58,8 +58,8 @@ const loadBalance = async (balanceId) => {
   document.querySelector('#errorText').classList.remove('d-none');
 }
 
-const getMineshafts = async (balanceId) => {
-  return await fetch(`api/mineshaft?balance=${balanceId}`)
+const getMineshafts = async (eventId) => {
+  return await fetch(`api/mineshaft?event=${eventId}`)
     .then(async (response) => {
       if (response.status === 200) {
         const content = await response.json()
@@ -203,9 +203,9 @@ const processData = (data) => {
   }
 }
 
-const selectBalanceIdNavbar = (balanceId) => {
+const selectEventIdNavbar = (eventId) => {
   for (let i of document.querySelectorAll('.nav-item')) {
-    if (i.getAttribute('data-balance') === balanceId) {
+    if (i.getAttribute('data-event') === eventId) {
       i.classList.add('active');
     } else {
       i.classList.remove('active');
@@ -245,18 +245,18 @@ const numberFormat = (n) => {
 
 window.addEventListener('hashchange', () => {
   const fragment = window.location.hash.substring(1);
-  loadBalance(fragment);
+  loadEvent(fragment);
 });
 
 window.addEventListener('load', async () => {
   const fragment = window.location.hash.substring(1);
-  loadBalance(fragment);
-  get_balance_ids().then((data) => {
+  loadEvent(fragment);
+  get_event_ids().then((data) => {
     if (data["status"]) {
       for (let i of data["content"]) {
         const li = document.createElement('li');
         li.classList.add('nav-item');
-        li.setAttribute('data-balance', i);
+        li.setAttribute('data-event', i);
         li.innerHTML = `<a class="nav-link" href="#${i}">${i.charAt(0).toUpperCase() + i.slice(1)}</a>`;
         document.querySelector('.navbar-nav').appendChild(li);
       }
