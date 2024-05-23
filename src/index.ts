@@ -1,26 +1,14 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import sqlite3 from 'sqlite3';
 import { readFile } from "fs/promises";
 import { Mineshaft } from './mineshaft';
 import { readdir } from "fs";
 
 dotenv.config();
 
-const app: Express = express();
+export const app: Express = express();
 const port = process.env.PORT || 3001;
 
-let db = new sqlite3.Database('./db.sqlite', (err) => {
-  if (err) {
-    return console.error(err.message);
-  }
-  console.log('Connected to the SQlite database.');
-});
-
-// create database structure
-db.serialize(() => {
-  db.run('CREATE TABLE IF NOT EXISTS event (id TEXT PRIMARY KEY, data TEXT NOT NULL)');
-});
 app.use(express.static('public', {extensions: ['html']}));
 app.use(express.static(__dirname + '/../node_modules/bootstrap/dist'));
 
