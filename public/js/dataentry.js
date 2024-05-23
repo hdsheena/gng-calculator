@@ -12,3 +12,4 @@ modeSwitch.addEventListener('change', function() {
     }
   }
 );
+
