@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import sqlite3 from 'sqlite3';
-import { app } from ".";
+import { app, getEventIds } from ".";
 
 let db = new sqlite3.Database('./db.sqlite', (err) => {
   if (err) {
@@ -10,12 +10,27 @@ let db = new sqlite3.Database('./db.sqlite', (err) => {
 });
 // create database structure - events have shafts, goblins, cards; shafts have levels, costs, income and cards; cards have levels and multipliers
 db.serialize(() => {
+  //db.run('DROP TABLE IF EXISTS event');
+  //db.run('DROP TABLE IF EXISTS shaft');
+  //db.run('DROP TABLE IF EXISTS card');
+  //db.run('DROP TABLE IF EXISTS shaft_card');
+  //db.run('DROP TABLE IF EXISTS goblin');
   db.run('CREATE TABLE IF NOT EXISTS event (id INTEGER PRIMARY KEY, name TEXT, start_date DATE, end_date DATE)');
   db.run('CREATE TABLE IF NOT EXISTS shaft (id INTEGER PRIMARY KEY, event_id INTEGER, name TEXT, level INTEGER, cost INTEGER, income INTEGER)');
   db.run('CREATE TABLE IF NOT EXISTS card (id INTEGER PRIMARY KEY, event_id INTEGER, name TEXT, rarity TEXT, max_level INTEGER)');
   db.run('CREATE TABLE IF NOT EXISTS shaft_card (id INTEGER PRIMARY KEY, shaft_id INTEGER, card_id INTEGER, level INTEGER, multiplier INTEGER)');
   db.run('CREATE TABLE IF NOT EXISTS goblin (id INTEGER PRIMARY KEY, event_id INTEGER, name TEXT, level INTEGER, cost INTEGER, count INTEGER)');
 });
+// seed db event table with data from getEventIds mmethod
+async function seedDb() {
+  // this should come from lte not from this method i think
+var eventIds = await getEventIds();
+eventIds.forEach((id) => {
+  db.run('INSERT INTO event (name) VALUES (?)', [id]);
+});
+}
+seedDb();
+
 // add some basic crud operations for each table
 // add event
 app.post('/api/event', (req: Request, res: Response) => {

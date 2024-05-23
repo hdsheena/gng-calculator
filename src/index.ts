@@ -12,21 +12,23 @@ const port = process.env.PORT || 3001;
 app.use(express.static('public', {extensions: ['html']}));
 app.use(express.static(__dirname + '/../node_modules/bootstrap/dist'));
 
-app.get("/api/event/all", async (req: Request, res: Response) => {
-  // return all eventids from event folder
+export const getEventIds = async (): Promise<string[]> => {
   const path = 'event';
-  
-  try {
-    const files = await new Promise<string[]>((resolve, reject) => {
-      readdir(path, (err, files) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(files);
-        }
-      });
+  const files = await new Promise<string[]>((resolve, reject) => {
+    readdir(path, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(files);
+      }
     });
-    const eventIds = files.map(file => file.replace('event_', '').replace('.json', ''));
+  });
+  return files.map(file => file.replace('event_', '').replace('.json', ''));
+};
+
+app.get("/api/event/all", async (req: Request, res: Response) => {
+  try {
+    const eventIds = await getEventIds();
     res.json(eventIds);
   } catch {
     res.sendStatus(404);
@@ -135,3 +137,4 @@ app.get("/api/mineshaft", async (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+import './db';
