@@ -246,6 +246,7 @@ const numberFormat = (n) => {
 window.addEventListener('hashchange', () => {
   const fragment = window.location.hash.substring(1);
   loadEvent(fragment);
+  build_input_html(fragment);
 });
 
 window.addEventListener('load', async () => {

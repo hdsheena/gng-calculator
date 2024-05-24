@@ -44,13 +44,8 @@ seedDb();
 // add some basic crud operations for each table
 // add event
 app.post('/api/event', (req: Request, res: Response) => {
-  db.run('INSERT INTO event (name, start_date, end_date) VALUES (?, ?, ?)', [req.body.name, req.body.start_date, req.body.end_date], function (err) {
-    if (err) {
-      res.sendStatus(500);
-    } else {
-      res.json({ id: this.lastID });
-    }
-  });
+// return an error
+res.sendStatus(500);
 });
 // get all events
 app.get('/api/event', (req: Request, res: Response) => {
@@ -63,8 +58,8 @@ app.get('/api/event', (req: Request, res: Response) => {
   });
 });
 // get one event
-app.get('/api/event/:id', (req: Request, res: Response) => {
-  db.get('SELECT * FROM event WHERE id = ?', [req.params.id], (err, row) => {
+app.get('/api/event/:name', (req: Request, res: Response) => {
+  db.get('SELECT * FROM event WHERE name = ?', [req.params.name], (err, row) => {
     if (err) {
       res.sendStatus(500);
     } else {
@@ -73,8 +68,8 @@ app.get('/api/event/:id', (req: Request, res: Response) => {
   });
 });
 // update event
-app.put('/api/event/:id', (req: Request, res: Response) => {
-  db.run('UPDATE event SET name = ?, start_date = ?, end_date = ? WHERE id = ?', [req.body.name, req.body.start_date, req.body.end_date, req.params.id], function (err) {
+app.put('/api/event/:name', (req: Request, res: Response) => {
+  db.run('UPDATE event SET start_date = ?, end_date = ? WHERE name = ?', [req.body.start_date, req.body.end_date, req.params.name], function (err) {
     if (err) {
       res.sendStatus(500);
     } else {
@@ -112,19 +107,21 @@ app.get('/api/shaft', (req: Request, res: Response) => {
     }
   });
 });
-// get one shaft
-app.get('/api/shaft/:id', (req: Request, res: Response) => {
-  db.get('SELECT * FROM shaft WHERE id = ?', [req.params.id], (err, row) => {
+// get event shafts
+app.get('/api/event/:event_id/shafts', (req: Request, res: Response) => {
+  db.all('SELECT * FROM shaft WHERE event_id = ?', [req.params.event_id], (err, rows) => {
     if (err) {
       res.sendStatus(500);
     } else {
-      res.json(row);
+      // log rows to terminal
+      console.log(rows);
+      res.json(rows);
     }
   });
 });
-// update shaft
+// update shaft level
 app.put('/api/shaft/:id', (req: Request, res: Response) => {
-  db.run('UPDATE shaft SET event_id = ?, name = ?, level = ?, cost = ?, income = ? WHERE id = ?', [req.body.event_id, req.body.name, req.body.level, req.body.cost, req.body.income, req.params.id], function (err) {
+  db.run('UPDATE shaft SET  level = ? WHERE id = ?', [req.body.level, req.params.id], function (err) {
     if (err) {
       res.sendStatus(500);
     } else {
