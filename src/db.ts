@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import sqlite3 from 'sqlite3';
 import { app, getEventIds } from ".";
+import { readFile } from "fs/promises";
+
 
 let db = new sqlite3.Database('./db.sqlite', (err) => {
   if (err) {
@@ -25,9 +27,17 @@ db.serialize(() => {
 async function seedDb() {
   // this should come from lte not from this method i think
 var eventIds = await getEventIds();
-eventIds.forEach((id) => {
+eventIds.forEach(async (id) => {
   db.run('INSERT INTO event (name) VALUES (?)', [id]);
-});
+
+  const json_data = JSON.parse(await readFile(`event/event_${id}.json`, "utf8"));
+  db.run('INSERT into shaft (event_id, name) VALUES (?, ?)', [id, 'spawningcart']);
+  for (const mineshaft of json_data.MineShafts) {
+    const name : string = mineshaft.Id;
+    db.run('INSERT into shaft (event_id, name) VALUES (?, ?)', [id, name]);
+  }
+  });
+
 }
 seedDb();
 
