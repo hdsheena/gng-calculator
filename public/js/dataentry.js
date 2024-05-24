@@ -52,7 +52,7 @@ const build_input_html = async (eventId) => {
         shaftTable.innerHTML = `
             <thead>
                 <tr>
-                <th>Event ID</th>
+                <th>Shaft ID</th>
                 <th>Shaft Name</th>
                 <th>Cost</th>
                 <th>Event ID</th>
@@ -68,8 +68,8 @@ const build_input_html = async (eventId) => {
                         <td>${shaft.cost}</td>
                         <td>${shaft.event_id}</td>
                         <td>${shaft.level}</td>
-                        <td><input></input></td>
-                        
+                        <td><input id="setLevelInput-${shaft.id}"></input></td>
+                        <td><button id="setLevelButton-${shaft.id}">Set Level</button></td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -79,3 +79,27 @@ const build_input_html = async (eventId) => {
         shaftTableElement.parentNode.replaceChild(shaftTable, shaftTableElement);
     }
 };
+// add listener for button id setLevelButton
+document.addEventListener('click', async function(event) {
+    if (event.target.id.startsWith('setLevelButton-')) {
+        const shaftId = event.target.id.split('-')[1];
+        const setLevelInput = document.getElementById(`setLevelInput-${shaftId}`);
+        const setLevel = setLevelInput.value;
+        console.log(`Setting level for shaft ${shaftId} to ${setLevel}`);
+        const response = await fetch(`api/shaft/${shaftId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                level: setLevel
+            })
+        });
+        const data = await response.json();
+        console.log(data);
+        // refresh table with updated data
+        const fragment = window.location.hash.substring(1);
+
+        build_input_html(fragment);
+    }
+});
