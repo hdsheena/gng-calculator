@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import sqlite3 from 'sqlite3';
 import { app, getEventIds } from ".";
 import { readFile } from "fs/promises";
+import { getForgeDataForEvent } from "./getForgeDataForEvent";
 
 
 let db = new sqlite3.Database('./db.sqlite', (err) => {
@@ -124,7 +125,7 @@ app.get('/api/event/:event_id/shafts', (req: Request, res: Response) => {
 app.put('/api/shaft/:id', (req: Request, res: Response) => {
   let updateShaftCalcs = false;
 
-  db.run('UPDATE shaft SET  level = ? WHERE id = ?', [req.body.level, req.params.id], function (err) {
+  db.run('UPDATE shaft SET  level = ? WHERE id = ?', [req.body.level, req.params.id], async function (err) {
     if (err) {
       //res.sendStatus(500);
     } else {
@@ -134,7 +135,7 @@ app.put('/api/shaft/:id', (req: Request, res: Response) => {
     if (updateShaftCalcs) {
       // call function to calculate cost adn income
       // update shaft with new cost and income
-      const shaftinfo = shaftCostIncome(req.params.id);
+      const shaftinfo = await shaftCostIncome(req.params.id);
       db.run('UPDATE shaft SET  cost = ?, income = ? WHERE id = ?', [shaftinfo.cost, shaftinfo.income, req.params.id], function (err) {
         if (err) {
           res.sendStatus(500);
@@ -148,13 +149,64 @@ app.put('/api/shaft/:id', (req: Request, res: Response) => {
   }
 });
 });
+
+
+
+function getShaft(shaftId: string): Promise<Shaft> {
+  return new Promise((resolve, reject) => {
+    let shaft = new Shaft();
+    db.get('SELECT * FROM shaft WHERE id = ?', [shaftId], (err, row: Shaft) => {
+      if (!err && row) {
+        // assign columns to shaft object
+        shaft.id = row.id;
+        shaft.event_id = row.event_id;
+        shaft.name = row.name;
+        shaft.level = row.level;
+        shaft.cost = row.cost;
+        shaft.income = row.income;
+
+        resolve(shaft);
+      }
+      else {
+        console.log('error getting shaft');
+        reject(new Error('error getting shaft'));
+      }
+    });
+  });
+}
+// define a class for shaft
+class Shaft {
+  id!: string;
+  event_id!: string;
+  name!: string;
+  level!: number;
+  cost!: number;
+  income!: number;
+}
 // define shaftCostIncoe
-function shaftCostIncome(shaftId: string) {
-  let cost = 0;
+async function shaftCostIncome(shaftId: string) {
+  // makee a new instantiation of shaft
+  let shaft = new Shaft();
+  // get shaft eventid
+  shaft = await getShaft(shaftId);
+  const eventId = shaft['event_id'];
+  const currentLevel = shaft['level'];
+
+  // get forge data for event
+  const forgeData = await getForgeDataForEvent(eventId);
+  let UpgradeCostGrowth = forgeData.UpgradeCostGrowth;
+  let UpgradeCostBase = forgeData.UpgradeCostBase;
+  //=(<<UpgradeCostGrowth>>^(<<TARGET NEXT BOOST LEVEL>>)-UpgradeCostGrowth^<<CURRENT LEVEL>>)/(UpgradeCostGrowth-1)*UpgradeCostBase
+  let newLevelUpgradeCost = (UpgradeCostGrowth ** (250))
+  let currentLevelUpgradeCost = (UpgradeCostGrowth ** (currentLevel))
+  
+  let cost = (newLevelUpgradeCost-currentLevelUpgradeCost / (UpgradeCostGrowth - 1) ) * UpgradeCostBase;
   let income = 0;
   // do some calculations
   return { cost, income };
 }
+
+
 // delete shaft
 app.delete('/api/shaft/:id', (req: Request, res: Response) => {
   db.run('DELETE FROM shaft WHERE id = ?', [req.params.id], function (err) {
