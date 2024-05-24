@@ -89,6 +89,42 @@ const getMineshafts = async (eventId) => {
     })
 }
 
+const createTableCells = (data, i, levelsProcessed, objectivesProcessed) => {
+  const cells = [];
+  for (let jx = 0; jx < data.length; jx++) {
+    const j = data[jx];
+    const price = document.createElement('td');
+    const multiplier = document.createElement('td');
+
+    if (levelsProcessed[jx] + j["CountPerObjective"][objectivesProcessed[jx]] !== i || levelsProcessed[jx] + j["CountPerObjective"][objectivesProcessed[jx]] > j["CostPerLevel"].length) {
+      price.innerText = '-';
+      multiplier.innerText = '-';
+    } else {
+      const priceActual = j["CostPerLevel"].slice(i - j["CountPerObjective"][1], i).reduce((partialSum, a) => partialSum + a, 0);
+
+      if (isNaN(priceActual) || priceActual === Infinity) {
+        price.innerText = '-';
+        multiplier.innerText = '-';
+      } else {
+        price.innerText = numberFormat(priceActual);
+
+        const multiplierActual = j["MultiplierPerObjective"][objectivesProcessed[jx]];
+        multiplier.innerText = multiplierActual.toLocaleString();
+
+        if (multiplierActual > 100) {
+          multiplier.classList.add('table-warning');
+        }
+      }
+
+      levelsProcessed[jx] += j["CountPerObjective"][objectivesProcessed[jx]];
+      objectivesProcessed[jx]++;
+    }
+
+    cells.push(price);
+    cells.push(multiplier);
+  }
+  return cells;
+}
 const processData = (data) => {
   let minimumRowInterval = Infinity;
   let maximumTableLength = 0;
@@ -156,38 +192,15 @@ const processData = (data) => {
 
     tr.append(n);
 
-    for (let jx = 0; jx < data.length; jx++) {
-      const j = data[jx];
-      const price = document.createElement('td');
-      const multiplier = document.createElement('td');
+    
 
-      if (levelsProcessed[jx] + j["CountPerObjective"][objectivesProcessed[jx]] !== i || levelsProcessed[jx] + j["CountPerObjective"][objectivesProcessed[jx]] > j["CostPerLevel"].length) {
-        price.innerText = '-';
-        multiplier.innerText = '-';
-      } else {
-        const priceActual = j["CostPerLevel"].slice(i - j["CountPerObjective"][1], i).reduce((partialSum, a) => partialSum + a, 0);
+   
 
-        if (isNaN(priceActual) || priceActual === Infinity) {
-          price.innerText = '-';
-          multiplier.innerText = '-';
-        } else {
-          price.innerText = numberFormat(priceActual);
+      const cells = createTableCells(data, i, levelsProcessed, objectivesProcessed);
+      tr.append(...cells);
 
-          const multiplierActual = j["MultiplierPerObjective"][objectivesProcessed[jx]];
-          multiplier.innerText = multiplierActual.toLocaleString();
-
-          if (multiplierActual > 100) {
-            multiplier.classList.add('table-warning');
-          }
-        }
-
-        levelsProcessed[jx] += j["CountPerObjective"][objectivesProcessed[jx]];
-        objectivesProcessed[jx]++;
-      }
-
-      tr.append(price);
-      tr.append(multiplier);
-    }
+      tbody.append(tr);
+    
 
     tbody.append(tr);
   }
