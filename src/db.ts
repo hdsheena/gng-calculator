@@ -39,7 +39,8 @@ eventIds.forEach(async (id) => {
   });
 
 }
-seedDb();
+// TODO: need some logic on when to seed the db
+//seedDb();
 
 // add some basic crud operations for each table
 // add event
@@ -121,14 +122,39 @@ app.get('/api/event/:event_id/shafts', (req: Request, res: Response) => {
 });
 // update shaft level
 app.put('/api/shaft/:id', (req: Request, res: Response) => {
+  let updateShaftCalcs = false;
+
   db.run('UPDATE shaft SET  level = ? WHERE id = ?', [req.body.level, req.params.id], function (err) {
     if (err) {
-      res.sendStatus(500);
+      //res.sendStatus(500);
     } else {
-      res.json({ changes: this.changes });
+      //res.json({ changes: this.changes });
+      updateShaftCalcs = true;
     }
-  });
+    if (updateShaftCalcs) {
+      // call function to calculate cost adn income
+      // update shaft with new cost and income
+      const shaftinfo = shaftCostIncome(req.params.id);
+      db.run('UPDATE shaft SET  cost = ?, income = ? WHERE id = ?', [shaftinfo.cost, shaftinfo.income, req.params.id], function (err) {
+        if (err) {
+          res.sendStatus(500);
+        } else {
+          res.json({ changes: this.changes });
+        }
+      });
+    
+  } else {
+    res.sendStatus(500);
+  }
 });
+});
+// define shaftCostIncoe
+function shaftCostIncome(shaftId: string) {
+  let cost = 0;
+  let income = 0;
+  // do some calculations
+  return { cost, income };
+}
 // delete shaft
 app.delete('/api/shaft/:id', (req: Request, res: Response) => {
   db.run('DELETE FROM shaft WHERE id = ?', [req.params.id], function (err) {

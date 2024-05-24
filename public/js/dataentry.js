@@ -52,10 +52,11 @@ const build_input_html = async (eventId) => {
         shaftTable.innerHTML = `
             <thead>
                 <tr>
+                <th>Event ID</th>
                 <th>Shaft ID</th>
                 <th>Shaft Name</th>
                 <th>Cost</th>
-                <th>Event ID</th>
+                <th>Income</th>
                 <th>Current Level</th>
                 <th>Set Level</th>
                 </tr>
@@ -63,10 +64,11 @@ const build_input_html = async (eventId) => {
             <tbody>
                 ${mineshafts["content"].map(shaft => `
                     <tr>
+                    <td>${shaft.event_id}</td>
                         <th scope="row">${shaft.id}</th>
                         <td>${shaft.name}</td>
                         <td>${shaft.cost}</td>
-                        <td>${shaft.event_id}</td>
+                       <td>${shaft.income}</td>
                         <td>${shaft.level}</td>
                         <td><input id="setLevelInput-${shaft.id}"></input></td>
                         <td><button id="setLevelButton-${shaft.id}">Set Level</button></td>
